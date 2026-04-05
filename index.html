@@ -53,8 +53,8 @@
                 </div>
             </div>
 
-            <!-- Agregar producto -->
-            <div class="card">
+            <!-- Formulario de Creación -->
+            <div class="card" id="formCard" style="display: none;">
                 <h2>📦 Agregar Producto</h2>
                 <div class="input-group">
                     <input id="nombre" type="text" placeholder="Nombre" aria-label="Nombre del Producto">
@@ -80,6 +80,7 @@
                         <input type="text" id="busqueda" placeholder="Buscar producto..." oninput="renderProductos()">
                     </div>
 
+                    <button id="btnCandado" class="secondary">🔒 Editar</button>
                     <button class="toggle-inventory-btn" onclick="toggleInventario()">
                         <span id="toggleText">Ocultar</span>
                     </button>

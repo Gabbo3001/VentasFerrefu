@@ -2,8 +2,14 @@
 let productos = JSON.parse(localStorage.getItem("productos")) || [];
 let ingresos = parseFloat(localStorage.getItem("ingresos")) || 0;
 let historial = JSON.parse(localStorage.getItem("historial")) || [];
-let editingIndex = -1; // Track the currently editing row
+let editingIndex = -1;
 const API_URL = "https://script.google.com/macros/s/AKfycbxrOTjgR3jGB63fp2F5bjwZg4VIOC79LxUVoxXWbHtc1_NWFjsY8fCY8XosHBeSGeNdTg/exec";
+
+// ---------- Auth ----------
+// El hash de "ferrefu2026" generado con SHA-256
+const PASS_HASH = "48a22b1a2a611d5273db4d79df354bc025ac405e808c54eefd0cfc1a6ecef223";
+const AUTH_SECRET = "ferrefu_secret_55"; // Token para que Google Script acepte cambios
+let isAuthenticated = sessionStorage.getItem("ferreAuth") === "1";
 
 // ---------- Persistence ----------
 function guardar() {
@@ -21,10 +27,15 @@ function guardar() {
 
 async function sincronizarConNube() {
     try {
+        const body = {
+            auth: AUTH_SECRET,
+            data: productos
+        };
+
         const response = await fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain" },
-            body: JSON.stringify(productos)
+            body: JSON.stringify(body)
         });
         console.log("Sync response status:", response.status);
     } catch (error) {
@@ -50,13 +61,8 @@ function render() {
 function renderProductos(filter = "") {
     const tabla = document.getElementById("tablaProductos");
     tabla.innerHTML = "";
-
-    // Map initial products with their original index to keep track during filtering and sorting
     const indexedProducts = productos.map((p, i) => ({ ...p, originalIndex: i }));
-
-    // Sort alphabetically by name
     indexedProducts.sort((a, b) => a.nombre.localeCompare(b.nombre, undefined, { sensitivity: 'base' }));
-
     const filtrados = indexedProducts.filter(p => p.nombre.toLowerCase().includes(filter.toLowerCase()));
 
     filtrados.forEach((p) => {
@@ -107,27 +113,36 @@ function renderProductos(filter = "") {
         tr.appendChild(statusTd);
 
         // Actions cell
-        const actionsTd = document.createElement("td");
-        actionsTd.style.textAlign = "right";
+        if (isAuthenticated) {
+            const actionsTd = document.createElement("td");
+            actionsTd.style.textAlign = "right";
 
-        if (isEditing) {
-            actionsTd.innerHTML = `
-                <div class="actions" style="justify-content: flex-end;">
-                    <button class="btn-icon" onclick="guardarFila(${p.originalIndex})" title="Guardar" style="color: var(--success)">✅</button>
-                </div>
-            `;
-        } else {
-            actionsTd.innerHTML = `
-                <div class="actions">
-                    <button class="btn-icon" onclick="iniciarEdicion(${p.originalIndex})" title="Editar"><i class='far fa-edit' style='font-size:15px;color:honeydew'></i></button>
-                    <button class="btn-icon" onclick="eliminarProducto(${p.originalIndex})" title="Eliminar"><i class='fas fa-trash' style='font-size:16px;color: red'></i></button>
-                </div>
-            `;
+            if (isEditing) {
+                actionsTd.innerHTML = `
+                    <div class="actions" style="justify-content: flex-end;">
+                        <button class="btn-icon" onclick="guardarFila(${p.originalIndex})" title="Guardar" style="color: var(--success)">✅</button>
+                    </div>
+                `;
+            } else {
+                actionsTd.innerHTML = `
+                    <div class="actions">
+                        <button class="btn-icon" onclick="iniciarEdicion(${p.originalIndex})" title="Editar"><i class='far fa-edit' style='font-size:15px;color:honeydew'></i></button>
+                        <button class="btn-icon" onclick="eliminarProducto(${p.originalIndex})" title="Eliminar"><i class='fas fa-trash' style='font-size:16px;color: red'></i></button>
+                    </div>
+                `;
+            }
+            tr.appendChild(actionsTd);
         }
-        tr.appendChild(actionsTd);
 
         tabla.appendChild(tr);
     });
+}
+
+function actualizarBotónCandado() {
+    const formCard = document.getElementById("formCard");
+    if (formCard) {
+        formCard.style.display = isAuthenticated ? "block" : "none";
+    }
 }
 
 function eliminarProducto(index) {
@@ -265,6 +280,8 @@ function renderStats() {
 
 // ---------- Actions ----------
 function agregarProducto() {
+    if (!isAuthenticated) { pedirPassword(); return; }
+
     const inputNombre = document.getElementById("nombre");
     const inputPrecio = document.getElementById("precio");
     const inputStock = document.getElementById("stock");
@@ -279,9 +296,7 @@ function agregarProducto() {
     }
 
     productos.push({ nombre, precio, stock });
-
     limpiarFormulario();
-
     guardar();
     render();
     showNotification("Producto agregado correctamente", "success");
@@ -342,6 +357,7 @@ function guardarFila(index) {
 }
 
 function venderProducto() {
+    if (!isAuthenticated) { pedirPassword(() => venderProducto()); return; }
     const select = document.getElementById("selectProducto");
     const inputCantidad = document.getElementById("cantidadVenta");
 
@@ -380,11 +396,102 @@ function venderProducto() {
 }
 
 function vaciarInventario() {
+    if (!isAuthenticated) { pedirPassword(); return; }
     if (confirm("⚠️ ¿Estás seguro de que quieres VACIAR TODO EL INVENTARIO? Esta acción no se puede deshacer.")) {
         productos = [];
         guardar();
         render();
         showNotification("Inventario vaciado", "success");
+    }
+}
+
+// ---------- Auth System ----------
+function pedirPassword(callback) {
+    const existing = document.getElementById("modalAuth");
+    if (existing) existing.remove();
+
+    const overlay = document.createElement("div");
+    overlay.id = "modalAuth";
+    overlay.style.cssText = `
+        position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+        display: flex; align-items: center; justify-content: center; z-index: 9999;
+        backdrop-filter: blur(4px);
+    `;
+    overlay.innerHTML = `
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 1rem;
+                    padding: 2rem; max-width: 340px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem">🔐</div>
+            <h3 style="color: var(--text); margin-bottom: 0.5rem;">Acceso requerido</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">Ingresa la contraseña para editar el inventario.</p>
+            <input id="authInput" type="password" placeholder="Contraseña"
+                   style="width:100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border);
+                          background: var(--background); color: var(--text); font-size: 1rem; margin-bottom: 1rem;"
+                   onkeydown="if(event.key==='Enter') verificarPassword()">
+            <div id="authError" style="color:var(--danger); font-size:0.8rem; min-height:1.2rem; margin-bottom:0.75rem;"></div>
+            <div style="display:flex; gap:1rem;">
+                <button onclick="document.getElementById('modalAuth').remove()" class="secondary" style="flex:1;">Cancelar</button>
+                <button onclick="verificarPassword()" class="primary" style="flex:1;">Ingresar</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+    setTimeout(() => document.getElementById("authInput")?.focus(), 50);
+    // Store callback for after auth
+    overlay._onSuccess = callback;
+}
+
+async function verificarPassword() {
+    const input = document.getElementById("authInput");
+    const err = document.getElementById("authError");
+    const rawValue = input.value;
+
+    // Generar SHA-256 del input
+    const msgUint8 = new TextEncoder().encode(rawValue);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    if (hashHex === PASS_HASH) {
+        isAuthenticated = true;
+        sessionStorage.setItem("ferreAuth", "1");
+        const overlay = document.getElementById("modalAuth");
+        const cb = overlay?._onSuccess;
+        overlay?.remove();
+        actualizarBotónCandado();
+        render();
+        if (cb) cb();
+    } else {
+        err.textContent = "Contraseña incorrecta";
+        input.value = "";
+        input.focus();
+    }
+}
+
+function cerrarSesion() {
+    isAuthenticated = false;
+    sessionStorage.removeItem("ferreAuth");
+    editingIndex = -1;
+    actualizarBotónCandado();
+    render();
+}
+
+function actualizarBotónCandado() {
+    const btn = document.getElementById("btnCandado");
+    const formCard = document.getElementById("formCard");
+
+    if (formCard) {
+        formCard.style.display = isAuthenticated ? "block" : "none";
+    }
+
+    if (!btn) return;
+    if (isAuthenticated) {
+        btn.innerHTML = "🔓 Cerrar sesión";
+        btn.style.color = "mediumspringgreen";
+        btn.onclick = cerrarSesion;
+    } else {
+        btn.innerHTML = "🔒 Editar";
+        btn.style.color = "";
+        btn.onclick = () => pedirPassword();
     }
 }
 
@@ -494,4 +601,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
     render();
     sincronizar(); // Initial sync on startup
+    actualizarBotónCandado(); // Initialize auth UI
 });
