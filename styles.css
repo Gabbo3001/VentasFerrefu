@@ -1,0 +1,435 @@
+:root {
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --background: #0f172a;
+    --surface: #1e293b;
+    --surface-hover: #334155;
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --accent: #ec4899;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--background);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 2rem 1rem;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 2.5rem;
+    background: linear-gradient(to right, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.025em;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+}
+
+.card h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.toggle-inventory-btn {
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    width: auto;
+    flex: none;
+}
+
+.toggle-inventory-btn:hover {
+    background: var(--border);
+    transform: translateY(-1px);
+}
+
+.toggle-inventory-btn .icon {
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+.collapsed .toggle-inventory-btn .icon {
+    transform: rotate(-180deg);
+}
+
+.collapsible-wrapper {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.collapsed .collapsible-wrapper {
+    grid-template-rows: 0fr;
+}
+
+.collapsible-content {
+    overflow: hidden;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+input,
+select {
+    background-color: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: var(--text);
+    font-size: 1rem;
+    width: 100%;
+    transition: border-color 0.2s ease, ring 0.2s ease;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.button-group {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+button {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    flex: 1;
+}
+
+button:hover {
+    background-color: var(--primary-hover);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+button.secondary {
+    background-color: var(--surface-hover);
+    color: var(--warning);
+}
+
+button.secondary:hover {
+    background-color: var(--border);
+}
+
+/* Table Design */
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+    /* Ensures column widths don't jump */
+}
+
+th,
+td {
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+th {
+    text-align: left;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+/* Specific column widths for stability */
+th:nth-child(1),
+td:nth-child(1) {
+    width: 45%;
+}
+
+/* Nombre */
+th:nth-child(2),
+td:nth-child(2) {
+    width: 15%;
+}
+
+/* Precio */
+th:nth-child(3),
+td:nth-child(3) {
+    width: 15%;
+}
+
+/* Stock */
+th:nth-child(4),
+td:nth-child(4) {
+    width: 15%;
+}
+
+/* Estado */
+th:nth-child(5),
+td:nth-child(5) {
+    width: 10%;
+}
+
+/* Acciones */
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+.table-input {
+    background-color: transparent;
+    border: 1px solid transparent;
+    padding: 0.5rem;
+    color: var(--text);
+    width: 100%;
+    /* Fill the cell */
+    border-radius: 0.375rem;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    text-align: left;
+    font-size: 0.875rem;
+}
+
+.table-input[readonly] {
+    cursor: default;
+    pointer-events: none;
+}
+
+.editing-row {
+    background-color: var(--surface-hover);
+}
+
+.editing-row .table-input {
+    pointer-events: auto;
+    border-color: var(--border);
+    background-color: var(--background);
+}
+
+.editing-row .table-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.no-spinners::-webkit-inner-spin-button,
+.no-spinners::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.no-spinners {
+    -moz-appearance: textfield;
+    appearance: none;
+}
+
+.actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-icon {
+    padding: 0.5rem;
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 0.375rem;
+}
+
+.btn-icon:hover {
+    background-color: var(--surface-hover);
+    color: var(--danger);
+}
+
+/* Summary stats */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, var(--surface), var(--background));
+    padding: 1.25rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--success);
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+/* History List */
+ul#historial {
+    list-style: none;
+}
+
+#historial li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.875rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+#historial li:last-child {
+    border-bottom: none;
+}
+
+/* Custom Searchable Dropdown */
+.searchable-select {
+    position: relative;
+    width: 100%;
+}
+
+.dropdown-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    margin-top: 0.25rem;
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    display: none;
+}
+
+.dropdown-list.show {
+    display: block;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-item:hover {
+    background-color: var(--surface-hover);
+}
+
+.dropdown-item .stock-pill {
+    font-size: 0.75rem;
+    background: var(--background);
+    padding: 0.2rem 0.5rem;
+    border-radius: 99px;
+    color: var(--text-muted);
+}
+
+.search-container {
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 640px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}

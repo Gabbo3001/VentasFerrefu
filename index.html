@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dashboard de gestión de ventas e inventario premium para Ferre.">
+    <title>FerreFu | Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Ventas Ferrefu</h1>
+        </header>
+
+        <!-- Resumen Rápido -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-value" id="totalVentas">S/. 0.00</span>
+                <span class="stat-label">Ingresos Totales</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="productoEstrella">-</span>
+                <span class="stat-label">Más Vendido</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="stockAlertas">0</span>
+                <span class="stat-label">Bajo Stock</span>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Venta -->
+            <div class="card">
+                <h2>🛒 Registrar Venta</h2>
+                <div class="input-group">
+                    <label for="searchProductoInput" class="stat-label">Seleccionar Producto</label>
+                    <div class="searchable-select">
+                        <input id="searchProductoInput" type="text" placeholder="Escribe para buscar..."
+                            onfocus="abrirDropdown()" oninput="filtrarDropdown(this.value)">
+                        <div id="dropdownProductos" class="dropdown-list"></div>
+                        <input type="hidden" id="selectProducto" value="">
+                    </div>
+                    <input id="cantidadVenta" type="number" min="1" placeholder="0" aria-label="Cantidad">
+                    <button onclick="venderProducto()" class="primary">Registrar Venta</button>
+                </div>
+            </div>
+
+            <!-- Agregar producto -->
+            <div class="card">
+                <h2>📦 Agregar Producto</h2>
+                <div class="input-group">
+                    <input id="nombre" type="text" placeholder="Nombre" aria-label="Nombre del Producto">
+                    <input id="precio" type="number" step="0.01" class="no-spinners" placeholder="Precio (S/.)"
+                        aria-label="Precio">
+                    <input id="stock" type="number" placeholder="Stock Inicial" aria-label="Stock Inicial">
+                    <div class="button-group">
+                        <button onclick="agregarProducto()" class="primary">Agregar</button>
+                        <button onclick="limpiarFormulario()" class="secondary">Limpiar</button>
+                        <button id="btnSincronizar" onclick="sincronizar()" class="secondary"
+                            title="Sincronizar con Google Sheets">Sincronizar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventario -->
+        <div class="card" id="inventoryCard">
+            <div class="card-header">
+                <h2>📋 INVENTARIO</h2>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <div style="max-width: 250px;">
+                        <input type="text" id="busqueda" placeholder="Buscar producto..." oninput="renderProductos()">
+                    </div>
+
+                    <button class="toggle-inventory-btn" onclick="toggleInventario()">
+                        <span id="toggleText">Ocultar</span>
+                    </button>
+                </div>
+            </div>
+            <div class="collapsible-wrapper">
+                <div class="collapsible-content">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="padding-left: 10px;">Nombre</th>
+                                    <th>Precio S/.</th>
+                                    <th>Stock</th>
+                                    <th>Estado</th>
+                                    <th style=" text-align: center;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaProductos"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historial -->
+        <div class="card" style="margin-top: 2rem;">
+            <h2>🕒 Historial Reciente</h2>
+            <ul id="historial"></ul>
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
