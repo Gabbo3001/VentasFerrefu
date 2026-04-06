@@ -17,8 +17,10 @@
 <body>
 
     <div class="container">
-        <header>
-            <h1>Ventas Ferrefu</h1>
+        <header
+            style="display: flex; flex-direction: column; align-items: center; margin-bottom: 1rem; gap: 1rem; text-align: center;">
+            <h1 style="margin-bottom: 0; width: 100%;">Ventas Ferrefu</h1>
+            <button id="btnCandado" class="secondary" style="max-width: 200px; flex: none;">🔒 Iniciar Sesión</button>
         </header>
 
         <!-- Resumen Rápido -->
@@ -26,10 +28,6 @@
             <div class="stat-card">
                 <span class="stat-value" id="totalVentas">S/. 0.00</span>
                 <span class="stat-label">Ingresos Totales</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-value" id="productoEstrella">-</span>
-                <span class="stat-label">Más Vendido</span>
             </div>
             <div class="stat-card">
                 <span class="stat-value" id="stockAlertas">0</span>
@@ -40,7 +38,7 @@
         <div class="grid">
             <!-- Venta -->
             <div class="card">
-                <h2>🛒 Registrar Venta</h2>
+                <h2>REGISTRAR VENTA</h2>
                 <div class="input-group">
                     <label for="searchProductoInput" class="stat-label">Seleccionar Producto</label>
                     <div class="searchable-select">
@@ -64,9 +62,6 @@
                     <input id="stock" type="number" placeholder="Stock Inicial" aria-label="Stock Inicial">
                     <div class="button-group">
                         <button onclick="agregarProducto()" class="primary">Agregar</button>
-                        <button onclick="limpiarFormulario()" class="secondary">Limpiar</button>
-                        <button id="btnSincronizar" onclick="sincronizar()" class="secondary"
-                            title="Sincronizar con Google Sheets">Sincronizar</button>
                     </div>
                 </div>
             </div>
@@ -75,13 +70,12 @@
         <!-- Inventario -->
         <div class="card" id="inventoryCard">
             <div class="card-header">
-                <h2>📋 INVENTARIO</h2>
+                <h2>INVENTARIO 📋</h2>
                 <div style="display: flex; gap: 1rem; align-items: center;">
                     <div style="max-width: 250px;">
                         <input type="text" id="busqueda" placeholder="Buscar producto..." oninput="renderProductos()">
                     </div>
 
-                    <button id="btnCandado" class="secondary">🔒 Editar</button>
                     <button class="toggle-inventory-btn" onclick="toggleInventario()">
                         <span id="toggleText">Ocultar</span>
                     </button>
@@ -93,11 +87,11 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="padding-left: 10px;">Nombre</th>
-                                    <th>Precio S/.</th>
+                                    <th style="padding-left: 10px;">Product</th>
+                                    <th>Price</th>
                                     <th>Stock</th>
-                                    <th>Estado</th>
-                                    <th style=" text-align: center;">Acciones</th>
+                                    <th>Status</th>
+                                    <th style=" text-align: center;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="tablaProductos"></tbody>

@@ -35,8 +35,6 @@ body {
 h1 {
     font-size: 2.5rem;
     font-weight: 800;
-    text-align: center;
-    margin-bottom: 2.5rem;
     background: linear-gradient(to right, var(--primary), var(--accent));
     -webkit-background-clip: text;
     background-clip: text;
@@ -74,6 +72,10 @@ h1 {
     justify-content: center;
     gap: 0.5rem;
     color: var(--text-muted);
+}
+
+#inventoryCard h2 {
+    margin-bottom: 0;
 }
 
 .card-header {
@@ -431,5 +433,76 @@ ul#historial {
 @media (max-width: 640px) {
     .grid {
         grid-template-columns: 1fr;
+    }
+
+    .card h2 {
+        justify-content: center;
+        text-align: center;
+        width: 100%;
+    }
+
+    .card-header {
+        flex-direction: column;
+        gap: 1.5rem;
+        text-align: center;
+    }
+
+    .card-header div {
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .button-group {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .stat-label {
+        display: block;
+        text-align: center;
+        width: 100%;
+    }
+
+    #inventoryCard {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    /* Ajuste de anchos de tabla para móvil */
+    th:nth-child(1),
+    td:nth-child(1) {
+        width: 40%;
+    }
+
+    /* Nombre */
+    th:nth-child(2),
+    td:nth-child(2) {
+        width: 17%;
+    }
+
+    /* Precio */
+    th:nth-child(3),
+    td:nth-child(3) {
+        width: 13%;
+    }
+
+    /* Stock */
+    th:nth-child(4),
+    td:nth-child(4) {
+        width: 15%;
+    }
+
+    /* Estado */
+    th:nth-child(5),
+    td:nth-child(5) {
+        width: 15%;
+    }
+
+    /* Acciones */
+
+    .table-input {
+        padding: 0.25rem;
+        font-size: 0.8rem;
     }
 }

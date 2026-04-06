@@ -100,13 +100,13 @@ function renderProductos(filter = "") {
         const statusTd = document.createElement("td");
         const statusSpan = document.createElement("span");
         if (p.stock > 2) {
-            statusSpan.textContent = "OK";
-            statusSpan.style.color = "var(--success)";
+            statusSpan.textContent = "YES";
+            statusSpan.style.color = "#00ffab";
         } else if (p.stock >= 1) {
-            statusSpan.textContent = "OK";
+            statusSpan.textContent = "LOW";
             statusSpan.style.color = "var(--warning)";
         } else {
-            statusSpan.textContent = "Sin Stock";
+            statusSpan.textContent = "NOT";
             statusSpan.style.color = "var(--danger)";
         }
         statusTd.appendChild(statusSpan);
@@ -126,8 +126,8 @@ function renderProductos(filter = "") {
             } else {
                 actionsTd.innerHTML = `
                     <div class="actions">
-                        <button class="btn-icon" onclick="iniciarEdicion(${p.originalIndex})" title="Editar"><i class='far fa-edit' style='font-size:15px;color:honeydew'></i></button>
-                        <button class="btn-icon" onclick="eliminarProducto(${p.originalIndex})" title="Eliminar"><i class='fas fa-trash' style='font-size:16px;color: red'></i></button>
+                        <button class="btn-icon" onclick="iniciarEdicion(${p.originalIndex})" title="Editar"><i class='far fa-edit' style='font-size:15px;color:yellow'></i></button>
+                        <button class="btn-icon" onclick="eliminarProducto(${p.originalIndex})" title="Eliminar"><i class='fas fa-trash' style='font-size:16px;color: #ed6d6d'></i></button>
                     </div>
                 `;
             }
@@ -138,12 +138,7 @@ function renderProductos(filter = "") {
     });
 }
 
-function actualizarBotónCandado() {
-    const formCard = document.getElementById("formCard");
-    if (formCard) {
-        formCard.style.display = isAuthenticated ? "block" : "none";
-    }
-}
+
 
 function eliminarProducto(index) {
     const nombre = productos[index]?.nombre || "este producto";
@@ -275,7 +270,6 @@ function renderStats() {
             topProduct = name;
         }
     }
-    document.getElementById("productoEstrella").textContent = topProduct;
 }
 
 // ---------- Actions ----------
@@ -489,32 +483,21 @@ function actualizarBotónCandado() {
         btn.style.color = "mediumspringgreen";
         btn.onclick = cerrarSesion;
     } else {
-        btn.innerHTML = "🔒 Editar";
+        btn.innerHTML = "🔒 Iniciar Sesión";
         btn.style.color = "";
         btn.onclick = () => pedirPassword();
     }
 }
 
 async function sincronizar() {
-    const btn = document.getElementById("btnSincronizar");
-    if (!btn) return;
-
-    const originalText = btn.innerHTML;
-    const originalColor = btn.style.color;
-
     try {
-        // UI Feedback: Syncing state
-        btn.innerHTML = "Sincronizando...";
-        btn.style.color = "var(--text-muted)";
-        btn.disabled = true;
-
+        console.log("Iniciando sincronización automática...");
         const response = await fetch(API_URL);
         if (!response.ok) throw new Error("Network response was not ok");
 
         const data = await response.json();
 
         if (Array.isArray(data)) {
-            // Auto-detect keys (nombre, precio, stock) regardless of capitalization
             productos = data.map(item => {
                 const keys = Object.keys(item);
                 const nombreKey = keys.find(k => k.toLowerCase().includes("nombre") || k.toLowerCase().includes("producto") || k.toLowerCase().includes("item")) || "";
@@ -528,25 +511,12 @@ async function sincronizar() {
                 };
             });
 
-            guardarSincronizado(); // Local save ONLY to avoid loop back to cloud
+            guardarSincronizado();
             render();
-
-            // UI Feedback: Success state
-            btn.innerHTML = "Sincronizado";
-            btn.style.color = "mediumspringgreen";
+            console.log("Sincronización automática completada exitosamente.");
         }
     } catch (error) {
-        console.error("Error sincronizando:", error);
-        btn.innerHTML = "Error";
-        btn.style.color = "var(--danger)";
-        // Re-enable button after error so user can retry
-        setTimeout(() => {
-            btn.innerHTML = "Sincronizar";
-            btn.style.color = "";
-            btn.disabled = false;
-        }, 3000);
-    } finally {
-        btn.disabled = false;
+        console.error("Error en sincronización automática:", error);
     }
 }
 
