@@ -506,11 +506,11 @@ async function sincronizar() {
             productos = res.productos;
             if (res.ingresos !== undefined) ingresos = parseFloat(res.ingresos);
             if (res.historial && Array.isArray(res.historial)) historial = res.historial;
-            
+
             guardarSincronizado();
             render();
             console.log("Sincronización completa finalizada con éxito.");
-        } 
+        }
         // CASO B: Formato antiguo (Solo array de productos)
         else if (Array.isArray(res)) {
             console.log("Detectado formato antiguo (Array). Mapeando...");

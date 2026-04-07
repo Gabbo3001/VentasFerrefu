@@ -191,6 +191,10 @@ button.secondary:hover {
 /* Table Design */
 .table-container {
     overflow-x: auto;
+    max-height: 500px; /* Solo se expande hasta aquí al mostrar */
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
 }
 
 table {
@@ -214,6 +218,10 @@ th {
     color: var(--text-muted);
     padding-top: 15px;
     padding-bottom: 15px;
+    position: sticky;
+    top: 0;
+    background-color: var(--surface);
+    z-index: 10;
 }
 
 /* Specific column widths for stability */
