@@ -29,7 +29,9 @@ async function sincronizarConNube() {
     try {
         const body = {
             auth: AUTH_SECRET,
-            data: productos
+            data: productos,
+            ingresos: ingresos,
+            historial: historial
         };
 
         const response = await fetch(API_URL, {
@@ -495,10 +497,21 @@ async function sincronizar() {
         const response = await fetch(API_URL);
         if (!response.ok) throw new Error("Network response was not ok");
 
-        const data = await response.json();
+        const res = await response.json();
 
-        if (Array.isArray(data)) {
-            productos = data.map(item => {
+        // CASO A: Nuevo formato (Objeto con productos, ingresos e historial)
+        if (res && res.productos && Array.isArray(res.productos)) {
+            productos = res.productos;
+            if (res.ingresos !== undefined) ingresos = parseFloat(res.ingresos);
+            if (res.historial && Array.isArray(res.historial)) historial = res.historial;
+
+            guardarSincronizado();
+            render();
+            console.log("Sincronización completa (Todo) realizada con éxito.");
+        }
+        // CASO B: Formato antiguo (Solo array de productos)
+        else if (Array.isArray(res)) {
+            productos = res.map(item => {
                 const keys = Object.keys(item);
                 const nombreKey = keys.find(k => k.toLowerCase().includes("nombre") || k.toLowerCase().includes("producto") || k.toLowerCase().includes("item")) || "";
                 const precioKey = keys.find(k => k.toLowerCase().includes("precio") || k.toLowerCase().includes("price") || k.toLowerCase().includes("costo")) || "";
@@ -513,7 +526,7 @@ async function sincronizar() {
 
             guardarSincronizado();
             render();
-            console.log("Sincronización automática completada exitosamente.");
+            console.log("Sincronización parcial (Solo productos) realizada.");
         }
     } catch (error) {
         console.error("Error en sincronización automática:", error);
