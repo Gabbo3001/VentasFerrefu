@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Dashboard de gestión de ventas e inventario para Ferre.">
-    <title>FerreFu | Dashboard</title>
+    <title>Ferreteria Yanahuara</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
     <div class="container">
         <header
             style="display: flex; flex-direction: column; align-items: center; margin-bottom: 1rem; gap: 1rem; text-align: center;">
-            <h1 style="margin-bottom: 0; width: 100%;">Ventas Ferrefu</h1>
+            <h1 style="margin-bottom: 0; width: 100%;">Ferreteria Yanahuara</h1>
             <button id="btnCandado" class="secondary" style="max-width: 200px; flex: none;">🔒 Iniciar Sesión</button>
         </header>
 
@@ -68,16 +68,16 @@
         </div>
 
         <!-- Inventario -->
-        <div class="card" id="inventoryCard">
+        <div class="card collapsed" id="inventoryCard">
             <div class="card-header">
-                <h2>INVENTARIO 📋</h2>
+                <h2>📋 INVENTARIO</h2>
                 <div style="display: flex; gap: 1rem; align-items: center;">
                     <div style="max-width: 250px;">
                         <input type="text" id="busqueda" placeholder="Buscar producto..." oninput="renderProductos()">
                     </div>
 
                     <button class="toggle-inventory-btn" onclick="toggleInventario()">
-                        <span id="toggleText">Ocultar</span>
+                        <span id="toggleText">Mostrar</span>
                     </button>
                 </div>
             </div>
@@ -102,11 +102,11 @@
         </div>
 
         <!-- Historial -->
-        <div class="card" id="historyCard" style="margin-top: 2rem;">
+        <div class="card collapsed" id="historyCard" style="margin-top: 2rem;">
             <div class="card-header">
-                <h2>🕒 Historial Reciente</h2>
+                <h2>🕒 HISTORIAL</h2>
                 <button class="toggle-inventory-btn" onclick="toggleHistorial()">
-                    <span id="toggleHistorialText">Ocultar</span>
+                    <span id="toggleHistorialText">Mostrar</span>
                 </button>
             </div>
             <div class="collapsible-wrapper">
@@ -117,6 +117,9 @@
         </div>
 
     </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
 
     <script src="app.js"></script>
 </body>

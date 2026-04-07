@@ -9,7 +9,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxrOTjgR3jGB63fp2F5bjwZ
 // El hash de "ferrefu2026" generado con SHA-256
 const PASS_HASH = "48a22b1a2a611d5273db4d79df354bc025ac405e808c54eefd0cfc1a6ecef223";
 const AUTH_SECRET = "ferrefu_secret_55"; // Token para que Google Script acepte cambios
-let isAuthenticated = sessionStorage.getItem("ferreAuth") === "1";
+let isAuthenticated = localStorage.getItem("ferreAuth") === "1";
 
 // ---------- Persistence ----------
 function guardar() {
@@ -62,10 +62,23 @@ function render() {
 
 function renderProductos(filter = "") {
     const tabla = document.getElementById("tablaProductos");
+    if (!tabla) return;
     tabla.innerHTML = "";
-    const indexedProducts = productos.map((p, i) => ({ ...p, originalIndex: i }));
-    indexedProducts.sort((a, b) => a.nombre.localeCompare(b.nombre, undefined, { sensitivity: 'base' }));
-    const filtrados = indexedProducts.filter(p => p.nombre.toLowerCase().includes(filter.toLowerCase()));
+
+    // Filtramos productos que no tengan nombre para evitar errores
+    const validProducts = productos.filter(p => p && typeof p.nombre === 'string');
+
+    const indexedProducts = validProducts.map((p, i) => ({ ...p, originalIndex: i }));
+
+    indexedProducts.sort((a, b) => {
+        const nameA = a.nombre || "";
+        const nameB = b.nombre || "";
+        return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+    });
+
+    const filtrados = indexedProducts.filter(p =>
+        p.nombre.toLowerCase().includes(filter.toLowerCase())
+    );
 
     filtrados.forEach((p) => {
         const isEditing = p.originalIndex === editingIndex;
@@ -75,8 +88,8 @@ function renderProductos(filter = "") {
         tr.innerHTML = `
             <td>
                 <input type="text" 
-                       id="name-input-${p.originalIndex}" 
-                       class="table-input wide" 
+                       id="name-input-${p.originalIndex}"
+                       class="table-input"
                        value="${p.nombre}" 
                        ${isEditing ? '' : 'readonly'}
                        title="${p.nombre}">
@@ -188,11 +201,13 @@ function mostrarConfirmacion(mensaje, onAceptar) {
 
 function renderSelect(filter = "") {
     const dropdown = document.getElementById("dropdownProductos");
+    if (!dropdown) return;
     dropdown.innerHTML = "";
 
     const filtrados = productos
+        .filter(p => p && typeof p.nombre === 'string')
         .map((p, i) => ({ ...p, originalIndex: i }))
-        .sort((a, b) => a.nombre.localeCompare(b.nombre, undefined, { sensitivity: 'base' }))
+        .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || "", undefined, { sensitivity: 'base' }))
         .filter(p => p.stock > 0 && p.nombre.toLowerCase().includes(filter.toLowerCase()));
 
     if (filtrados.length === 0) {
@@ -252,16 +267,21 @@ function renderHistorial() {
 }
 
 function renderStats() {
-    document.getElementById("totalVentas").textContent = currency.format(ingresos);
+    const totalVentasEl = document.getElementById("totalVentas");
+    if (totalVentasEl) totalVentasEl.textContent = currency.format(ingresos);
 
     // Low stock count
-    const lowStockCount = productos.filter(p => p.stock <= 5).length;
-    document.getElementById("stockAlertas").textContent = lowStockCount;
+    const validProducts = productos.filter(p => p && typeof p.stock === 'number');
+    const lowStockCount = validProducts.filter(p => p.stock <= 5).length;
+    const stockAlertasEl = document.getElementById("stockAlertas");
+    if (stockAlertasEl) stockAlertasEl.textContent = lowStockCount;
 
     // Top product (most sold based on history)
     const salesCount = {};
     historial.forEach(h => {
-        salesCount[h.nombre] = (salesCount[h.nombre] || 0) + h.cantidad;
+        if (h && h.nombre) {
+            salesCount[h.nombre] = (salesCount[h.nombre] || 0) + h.cantidad;
+        }
     });
 
     let topProduct = "-";
@@ -315,11 +335,6 @@ function iniciarEdicion(index) {
             input.select();
         }
     }, 10);
-}
-
-function cancelarEdicion() {
-    editingIndex = -1;
-    render();
 }
 
 function guardarFila(index) {
@@ -380,7 +395,7 @@ function venderProducto() {
         nombre: producto.nombre,
         cantidad: cantidad,
         total: total,
-        date: new Date().toLocaleTimeString()
+        date: formatFechaReciente()
     });
 
     inputCantidad.value = ""; // Reset to empty for the next selection
@@ -389,17 +404,9 @@ function venderProducto() {
     guardar();
     render();
     showNotification(`Venta registrada: ${currency.format(total)}`, "success");
+    console.log(`Venta registrada: ${currency.format(total)}`);
 }
 
-function vaciarInventario() {
-    if (!isAuthenticated) { pedirPassword(); return; }
-    if (confirm("⚠️ ¿Estás seguro de que quieres VACIAR TODO EL INVENTARIO? Esta acción no se puede deshacer.")) {
-        productos = [];
-        guardar();
-        render();
-        showNotification("Inventario vaciado", "success");
-    }
-}
 
 // ---------- Auth System ----------
 function pedirPassword(callback) {
@@ -441,21 +448,26 @@ async function verificarPassword() {
     const err = document.getElementById("authError");
     const rawValue = input.value;
 
-    // Generar SHA-256 del input
-    const msgUint8 = new TextEncoder().encode(rawValue);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    // 1. Intentar verificación segura (SHA-256)
+    if (window.crypto && window.crypto.subtle) {
+        try {
+            const msgUint8 = new TextEncoder().encode(rawValue);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-    if (hashHex === PASS_HASH) {
-        isAuthenticated = true;
-        sessionStorage.setItem("ferreAuth", "1");
-        const overlay = document.getElementById("modalAuth");
-        const cb = overlay?._onSuccess;
-        overlay?.remove();
-        actualizarBotónCandado();
-        render();
-        if (cb) cb();
+            if (hashHex === PASS_HASH) {
+                completarLogin();
+                return;
+            }
+        } catch (e) {
+            console.error("Error en crypto:", e);
+        }
+    }
+
+    // 2. Respaldo (Fallback) si crypto falla o no está disponible
+    if (rawValue === "ferrefu2026") {
+        completarLogin();
     } else {
         err.textContent = "Contraseña incorrecta";
         input.value = "";
@@ -463,9 +475,20 @@ async function verificarPassword() {
     }
 }
 
+function completarLogin() {
+    isAuthenticated = true;
+    localStorage.setItem("ferreAuth", "1");
+    const overlay = document.getElementById("modalAuth");
+    const cb = overlay?._onSuccess;
+    overlay?.remove();
+    actualizarBotónCandado();
+    render();
+    if (cb) cb();
+}
+
 function cerrarSesion() {
     isAuthenticated = false;
-    sessionStorage.removeItem("ferreAuth");
+    localStorage.removeItem("ferreAuth");
     editingIndex = -1;
     actualizarBotónCandado();
     render();
@@ -493,27 +516,27 @@ function actualizarBotónCandado() {
 
 async function sincronizar() {
     try {
-        console.log("Iniciando sincronización con URL: ", API_URL);
+        console.log("Iniciando sincronización...");
         const response = await fetch(API_URL);
         if (!response.ok) throw new Error("Error en respuesta de servidor: " + response.status);
 
         const res = await response.json();
-        console.log("Respuesta recibida del servidor:", res);
 
-        // CASO A: Nuevo formato (Objeto con productos, ingresos e historial)
-        if (res && res.productos && Array.isArray(res.productos)) {
-            console.log("Detectado nuevo formato (Objeto). Aplicando datos...");
-            productos = res.productos;
+        if (res && res.productos) {
+            // Actualizamos Productos de forma segura
+            productos = Array.isArray(res.productos) ? res.productos : productos;
+
+            // Actualizamos Ingresos (si no viene nada, mantenemos el local o ponemos 0)
             if (res.ingresos !== undefined) ingresos = parseFloat(res.ingresos);
-            if (res.historial && Array.isArray(res.historial)) historial = res.historial;
+
+            // Actualizamos Historial - Si viene vacío de la nube, se limpia el historial local
+            historial = (res.historial && Array.isArray(res.historial)) ? res.historial : [];
 
             guardarSincronizado();
             render();
-            console.log("Sincronización completa finalizada con éxito.");
-        }
-        // CASO B: Formato antiguo (Solo array de productos)
-        else if (Array.isArray(res)) {
-            console.log("Detectado formato antiguo (Array). Mapeando...");
+            console.log("Sincronización completa ✅");
+        } else if (Array.isArray(res)) {
+            // Legacy/Caso B
             productos = res.map(item => {
                 const keys = Object.keys(item);
                 const kNombre = keys.find(k => /nombre|producto|item/i.test(k)) || "";
@@ -529,13 +552,32 @@ async function sincronizar() {
 
             guardarSincronizado();
             render();
-            console.log("Sincronización parcial finalizada.");
-        } else {
-            console.warn("Formato de respuesta desconocido:", res);
+            console.log("✅ Sincronización parcial completa.");
         }
     } catch (error) {
         console.error("⛔ Error de sincronización:", error);
+        // showNotification("No se pudo sincronizar con la nube automáticamente", "error");
     }
+}
+
+function formatFechaReciente() {
+    const ahora = new Date();
+    const opciones = {
+        weekday: 'short',
+        day: '2-digit',
+        month: '2-digit',
+        year: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    };
+
+    // Generar: "lun, 07/04/26 17:41"
+    let fecha = ahora.toLocaleString('es-ES', opciones).replace(',', '');
+    // Quitar puntos finales del nombre del día si los hay (p.ej. "lun." -> "lun")
+    fecha = fecha.replace('.', '');
+    // Capitalizar la primera letra y agregar "hrs"
+    return fecha.charAt(0).toUpperCase() + fecha.slice(1) + " hrs";
 }
 
 // Special guardar function for SYNC to avoid infinite loops (GET -> guardar -> POST)
@@ -546,10 +588,51 @@ function guardarSincronizado() {
 }
 
 // ---------- UI Helpers ----------
-function showNotification(message, type) {
+function showNotification(message, type = "info") {
     console.log(`${type.toUpperCase()}: ${message}`);
-    const emoji = type === "error" ? "⚠️ " : "✅ ";
-    alert(emoji + message);
+
+    // Si no es un evento de éxito (como errors o validaciones faltantes), usar alert
+    if (type !== "success") {
+        const emoji = type === "error" ? "⚠️ " : "ℹ️ ";
+        alert(emoji + message);
+        return;
+    }
+
+    const container = document.getElementById("toast-container");
+    if (!container) return;
+
+    // Mapping type to emojis/icons for premium look
+    const icons = {
+        success: "✅",
+        error: "⚠️",
+        warning: "⚡",
+        info: "ℹ️"
+    };
+
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+
+    toast.innerHTML = `
+        <div class="toast-icon">
+            <span>${icons[type] || icons.info}</span>
+        </div>
+        <div class="toast-content">
+            ${message}
+        </div>
+        <button class="toast-close" onclick="this.parentElement.classList.add('removing'); setTimeout(() => this.parentElement.remove(), 300)">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+
+    container.appendChild(toast);
+
+    // Auto remove after 3.5 seconds
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.classList.add('removing');
+            setTimeout(() => toast.remove(), 300); // Matches CSS transition duration
+        }
+    }, 3500);
 }
 
 function toggleInventario() {
@@ -558,7 +641,7 @@ function toggleInventario() {
     const isCollapsed = card.classList.toggle("collapsed");
 
     text.textContent = isCollapsed ? "Mostrar" : "Ocultar";
-    localStorage.setItem("inventoryVisible", !isCollapsed);
+    localStorage.setItem("inventoryVisible", isCollapsed ? "false" : "true");
 }
 
 function toggleHistorial() {
@@ -567,35 +650,48 @@ function toggleHistorial() {
     const isCollapsed = card.classList.toggle("collapsed");
 
     text.textContent = isCollapsed ? "Mostrar" : "Ocultar";
-    localStorage.setItem("historyVisible", !isCollapsed);
+    localStorage.setItem("historyVisible", isCollapsed ? "false" : "true");
 }
 
 // ---------- Initial Render ----------
 document.addEventListener("DOMContentLoaded", () => {
-    // Basic search listener
-    document.getElementById("busqueda").addEventListener("input", () => {
-        render();
-    });
+    // Prioridad: Inicializar UI de autenticación primero para que el botón siempre responda
+    actualizarBotónCandado();
 
-    // Restore inventory visibility state
+    try {
+        render();
+        sincronizar(); // Sincronización inicial
+    } catch (e) {
+        console.error("Error en carga inicial:", e);
+    }
+
+    // Listener de búsqueda
+    const busqueda = document.getElementById("busqueda");
+    if (busqueda) {
+        busqueda.addEventListener("input", () => {
+            render();
+        });
+    }
+
+    // Restore inventory visibility state (Hidden by default in HTML, show only if "true")
     const inventoryVisible = localStorage.getItem("inventoryVisible");
-    if (inventoryVisible === "false") {
+    if (inventoryVisible === "true") {
         const card = document.getElementById("inventoryCard");
         const text = document.getElementById("toggleText");
         if (card && text) {
-            card.classList.add("collapsed");
-            text.textContent = "Mostrar";
+            card.classList.remove("collapsed");
+            text.textContent = "Ocultar";
         }
     }
 
-    // Restore history visibility state
+    // Restore history visibility state (Hidden by default in HTML, show only if "true")
     const historyVisible = localStorage.getItem("historyVisible");
-    if (historyVisible === "false") {
+    if (historyVisible === "true") {
         const card = document.getElementById("historyCard");
         const text = document.getElementById("toggleHistorialText");
         if (card && text) {
-            card.classList.add("collapsed");
-            text.textContent = "Mostrar";
+            card.classList.remove("collapsed");
+            text.textContent = "Ocultar";
         }
     }
 
@@ -606,8 +702,4 @@ document.addEventListener("DOMContentLoaded", () => {
             dropdown.classList.remove("show");
         }
     });
-
-    render();
-    sincronizar(); // Initial sync on startup
-    actualizarBotónCandado(); // Initialize auth UI
 });
