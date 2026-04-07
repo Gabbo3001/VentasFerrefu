@@ -493,43 +493,48 @@ function actualizarBotónCandado() {
 
 async function sincronizar() {
     try {
-        console.log("Iniciando sincronización automática...");
+        console.log("Iniciando sincronización con URL: ", API_URL);
         const response = await fetch(API_URL);
-        if (!response.ok) throw new Error("Network response was not ok");
+        if (!response.ok) throw new Error("Error en respuesta de servidor: " + response.status);
 
         const res = await response.json();
+        console.log("Respuesta recibida del servidor:", res);
 
         // CASO A: Nuevo formato (Objeto con productos, ingresos e historial)
         if (res && res.productos && Array.isArray(res.productos)) {
+            console.log("Detectado nuevo formato (Objeto). Aplicando datos...");
             productos = res.productos;
             if (res.ingresos !== undefined) ingresos = parseFloat(res.ingresos);
             if (res.historial && Array.isArray(res.historial)) historial = res.historial;
-
+            
             guardarSincronizado();
             render();
-            console.log("Sincronización completa (Todo) realizada con éxito.");
-        }
+            console.log("Sincronización completa finalizada con éxito.");
+        } 
         // CASO B: Formato antiguo (Solo array de productos)
         else if (Array.isArray(res)) {
+            console.log("Detectado formato antiguo (Array). Mapeando...");
             productos = res.map(item => {
                 const keys = Object.keys(item);
-                const nombreKey = keys.find(k => k.toLowerCase().includes("nombre") || k.toLowerCase().includes("producto") || k.toLowerCase().includes("item")) || "";
-                const precioKey = keys.find(k => k.toLowerCase().includes("precio") || k.toLowerCase().includes("price") || k.toLowerCase().includes("costo")) || "";
-                const stockKey = keys.find(k => k.toLowerCase().includes("stock") || k.toLowerCase().includes("cantidad") || k.toLowerCase().includes("existencia")) || "";
+                const kNombre = keys.find(k => /nombre|producto|item/i.test(k)) || "";
+                const kPrecio = keys.find(k => /precio|price|costo/i.test(k)) || "";
+                const kStock = keys.find(k => /stock|cantidad|existencia/i.test(k)) || "";
 
                 return {
-                    nombre: item[nombreKey] || "Sin nombre",
-                    precio: parseFloat(item[precioKey] || 0),
-                    stock: parseInt(item[stockKey] || 0)
+                    nombre: item[kNombre] || "Sin nombre",
+                    precio: parseFloat(item[kPrecio] || 0),
+                    stock: parseInt(item[kStock] || 0)
                 };
             });
 
             guardarSincronizado();
             render();
-            console.log("Sincronización parcial (Solo productos) realizada.");
+            console.log("Sincronización parcial finalizada.");
+        } else {
+            console.warn("Formato de respuesta desconocido:", res);
         }
     } catch (error) {
-        console.error("Error en sincronización automática:", error);
+        console.error("⛔ Error de sincronización:", error);
     }
 }
 
