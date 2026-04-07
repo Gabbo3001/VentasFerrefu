@@ -102,9 +102,18 @@
         </div>
 
         <!-- Historial -->
-        <div class="card" style="margin-top: 2rem;">
-            <h2>🕒 Historial Reciente</h2>
-            <ul id="historial"></ul>
+        <div class="card" id="historyCard" style="margin-top: 2rem;">
+            <div class="card-header">
+                <h2>🕒 Historial Reciente</h2>
+                <button class="toggle-inventory-btn" onclick="toggleHistorial()">
+                    <span id="toggleHistorialText">Ocultar</span>
+                </button>
+            </div>
+            <div class="collapsible-wrapper">
+                <div class="collapsible-content">
+                    <ul id="historial"></ul>
+                </div>
+            </div>
         </div>
 
     </div>

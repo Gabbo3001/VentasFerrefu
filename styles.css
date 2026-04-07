@@ -191,7 +191,7 @@ button.secondary:hover {
 /* Table Design */
 .table-container {
     overflow-x: auto;
-    max-height: 500px; /* Solo se expande hasta aquí al mostrar */
+    max-height: 230px; /* Reducido para mostrar aproximadamente 5 items al expandir */
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--primary) transparent;

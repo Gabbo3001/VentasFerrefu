@@ -561,6 +561,15 @@ function toggleInventario() {
     localStorage.setItem("inventoryVisible", !isCollapsed);
 }
 
+function toggleHistorial() {
+    const card = document.getElementById("historyCard");
+    const text = document.getElementById("toggleHistorialText");
+    const isCollapsed = card.classList.toggle("collapsed");
+
+    text.textContent = isCollapsed ? "Mostrar" : "Ocultar";
+    localStorage.setItem("historyVisible", !isCollapsed);
+}
+
 // ---------- Initial Render ----------
 document.addEventListener("DOMContentLoaded", () => {
     // Basic search listener
@@ -573,6 +582,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (inventoryVisible === "false") {
         const card = document.getElementById("inventoryCard");
         const text = document.getElementById("toggleText");
+        if (card && text) {
+            card.classList.add("collapsed");
+            text.textContent = "Mostrar";
+        }
+    }
+
+    // Restore history visibility state
+    const historyVisible = localStorage.getItem("historyVisible");
+    if (historyVisible === "false") {
+        const card = document.getElementById("historyCard");
+        const text = document.getElementById("toggleHistorialText");
         if (card && text) {
             card.classList.add("collapsed");
             text.textContent = "Mostrar";
